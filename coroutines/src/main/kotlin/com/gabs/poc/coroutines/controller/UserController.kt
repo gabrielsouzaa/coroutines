@@ -34,27 +34,27 @@ class UserController {
     @GetMapping("/v3/users")
     fun createUserV3(): User {
         val user = User(id = 1, name = "John Doe")
-        val result = userService.verifyEmail(user)
-        println(result)
+        userService.verifyEmail(user)
+        userService.verifyName(user)
         return user
-    }
-
-    @GetMapping("/v3/runblocking/users")
-    fun createUserCoroutinesV3(): User {
-        return runBlocking {
-            val user = User(id = 1, name = "John Doe")
-            async { userService.verifyEmail(user) }
-            user
-        }
     }
 
     @GetMapping("/v3/dispatchers/users")
     fun createUserDispatchersV3(): User {
         return runBlocking(context = Dispatchers.IO) {
             val user = User(id = 1, name = "John Doe")
-            async { userService.verifyEmail(user) }
+            async { userService.verifyEmailSuspend(user) }.await()
+            async { userService.verifyNameSuspend(user) }.await()
             user
         }
+    }
+
+    @GetMapping("/v3/coroutines/users")
+    suspend fun createUserCoroutineV3(): User = coroutineScope {
+            val user = User(id = 1, name = "John Doe")
+            async { userService.verifyEmailSuspend(user) }.await()
+            async { userService.verifyNameSuspend(user) }.await()
+            user
     }
 
     @GetMapping("/thread")
